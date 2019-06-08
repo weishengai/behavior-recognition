@@ -10,6 +10,8 @@ import cv2
 import numpy as np
 import time
 import settings
+from PIL import ImageFont, Image, ImageDraw
+
 
 poseEstimator = None
 
@@ -37,6 +39,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.joints = []
         self.current = []
         self.previous = []
+        self.font = ImageFont.truetype(settings.fontpath, settings.fontsize)
 
     def set_ui(self):
 
@@ -191,6 +194,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             elif self.__flag_mode == 3:
                 self.infoBox.setText(u'当前为人体行为识别模式')
                 humans = poseEstimator.inference(show)
+                show = TfPoseEstimator.draw_humans(show, humans, imgcopy=False)
                 ori = np.copy(show)
                 show, joints, bboxes, xcenter, sk= TfPoseEstimator.get_skeleton(show, humans, imgcopy=False)
                 height = show.shape[0]
@@ -223,6 +227,8 @@ class Ui_MainWindow(QtWidgets.QWidget):
                             j = np.argmin(np.array([abs(i - (xmax + xmin) / 2.) for i in xcenter]))
                         except:
                             j = 0
+
+                        alert = False
                         if joint_filter(joints[j]):
                             joints[j] = joint_completion(joint_completion(joints[j]))
                             if label not in self.data:
@@ -245,14 +251,29 @@ class Ui_MainWindow(QtWidgets.QWidget):
                                 if location[1] <= 10:
                                     location = (location[0], 31)
 
-                                cv2.putText(show, settings.move_status[pred], (location[0] - 30, location[1] - 10),
-                                            cv2.FONT_HERSHEY_SIMPLEX, 0.8,
-                                            (0, 255, 0), 2)
+                                ## Use simsum.ttc to write Chinese.
+                                b, g, r, a = 0, 255, 0, 0
+                                img_pil = Image.fromarray(show)
+                                draw = ImageDraw.Draw(img_pil)
+                                # print('pred', pred)
+                                if pred == 8:
+                                    draw.text((location[0] - 30, location[1] - 10), settings.move_status[pred], font=self.font, fill=(255, 0, 0, a))
+                                    alert = True
+                                else:
+                                    draw.text((location[0] - 30, location[1] - 10), settings.move_status[pred], font=self.font, fill=(b, g, r, a))
+                                show = np.array(img_pil)
 
+                                # cv2.putText(show, settings.move_status[pred], (location[0] - 30, location[1] - 10),
+                                #             cv2.FONT_HERSHEY_SIMPLEX, 0.8,
+                                #             (0, 255, 0), 2)
+                        if alert:
+                            colors = (255, 0, 0)
+                        else:
+                            colors = (int(settings.c[label % 32, 0]),
+                                           int(settings.c[label % 32, 1]),
+                                           int(settings.c[label % 32, 2]))
                         cv2.rectangle(show, (xmin, ymin), (xmax, ymax),
-                                      (int(settings.c[label % 32, 0]),
-                                       int(settings.c[label % 32, 1]),
-                                       int(settings.c[label % 32, 2])), 4)
+                                      colors, 4)
 
             end = time.time()
             self.fps = 1. / (end - start)
