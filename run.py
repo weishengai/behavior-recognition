@@ -275,6 +275,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
                         cv2.rectangle(show, (xmin, ymin), (xmax, ymax),
                                       colors, 4)
 
+                        if alert:
+                            cv2.imwrite('files/alerts/fall_' + str(int(time.time())) + '.png', show)
+
             end = time.time()
             self.fps = 1. / (end - start)
             cv2.putText(show, 'FPS: %.2f' % self.fps, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
