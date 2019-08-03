@@ -14,6 +14,8 @@ The old version is in [old branch](https://github.com/TianzhongSong/Real-Time-Ac
 
 Using [Anaconda](https://www.anaconda.com/download/) is recommended.
 
+## support python3 only
+
 opencv
 
     pip install opencv-python
@@ -25,6 +27,8 @@ tensorflow1.3
 filterpy
 
     pip install filterpy
+
+pip3 install pyqt5
 
 ## usage
 
